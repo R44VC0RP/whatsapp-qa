@@ -252,6 +252,12 @@ def index():
 def upload_success(filename):
   return render_template('upload_success.html')
 
+# This was for repl.it
+#if __name__ == "__main__":
+#app.run(host='0.0.0.0', port=81, debug=True)
 
+
+# This is for heroku
 if __name__ == "__main__":
-  app.run(host='0.0.0.0', port=81, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
