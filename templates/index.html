@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+<div class="container">
+    <h1 class="header">Dashboard</h1>
+    <div class="dropbox">
+        <div class="intro">
+            <h4>No recent uploads</h4>
+            <p>Drag and drop to upload PDF files or create a new watch folder for auto-upload.</p>
+        </div>
+        <div class="upload-area">
+            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+              <input type="text" name="dataset_name" id="dataset_name" placeholder="Enter dataset name" required/>
+              <br>
+              <br>
+                <div class="file-drop-area">
+                  
+                    <span class="file-drop-message">Drag and drop files here or click to upload</span>
+                    <input type="file" name="file" id="file" class="inputfile" data-multiple-caption="{count} files selected" multiple accept=".pdf" required/>
+                    <label for="file">
+                        <strong>Choose a PDF file</strong>
+                        <span class="dragndrop"> or drag it here</span>.
+                    </label>
+                    <p class="error-message" hidden id="fileError">Please select a PDF file.</p>
+                </div>
+                <button type="submit" class="upload-btn">Upload</button>
+            </form>
+        </div>
+        <div class="queued-files">
+            <h4>Queued Files:</h4>
+            <ul id="fileList">
+                <!-- List of files to be uploaded will be appended here -->
+            </ul>
+            <div id="progress-wrappers">
+                <!-- Progress bars will be appended here -->
+            </div>
+        </div>
+        <div class="dataset-selection">
+    <h4>Select a Text Dataset:</h4>
+    <form action="/select_dataset" method="post" id="datasetForm">
+        {% for dataset in datasets %}
+        <div class="dataset-option">
+            <input type="radio" id="{{ dataset.name }}" name="dataset" value="{{ dataset.name }}"
+                {% if dataset.name == selected_dataset %} checked {% endif %}>
+            <label for="{{ dataset.name }}">{{ dataset.name }}: {{ dataset.count }}</label>
+        </div>
+        {% endfor %}
+        <button type="submit" class="select-dataset-btn">Select Dataset</button>
+    </form>
+</div>
+
+    </div>
+</div>
+<div id="loading">Uploading...</div>
+<script>
+  document.querySelector('#uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    document.getElementById('loading').style.display = 'block'; // Show the loading screen
+    var files = document.querySelector('#file').files;
+    var fileList = document.getElementById('fileList');
+    var progressWrappers = document.getElementById('progress-wrappers');
+    fileList.innerHTML = ''; // Clear the list
+    progressWrappers.innerHTML = ''; // Clear the progress bars
+    for (var i = 0; i < files.length; i++) {
+        var listItem = document.createElement('li');
+        listItem.textContent = files[i].name;
+        fileList.appendChild(listItem);
+
+        var progressWrapper = document.createElement('div');
+        progressWrapper.className = 'progress-wrapper';
+        var progressBar = document.createElement('div');
+        progressBar.id = 'progress-bar-' + i;
+        progressBar.className = 'progress';
+        progressWrapper.appendChild(progressBar);
+        progressWrappers.appendChild(progressWrapper);
+
+        var formData = new FormData();
+        formData.append('file', files[i]);
+
+        var request = new XMLHttpRequest();
+
+        request.upload.addEventListener('progress', (function(file, progressBar) {
+            return function(e) {
+                if (e.loaded <= file.size) {
+                    var percent = Math.round(e.loaded / file.size * 100);
+                    progressBar.style.width = percent + '%';
+                    progressBar.innerHTML = percent + '%';
+                } 
+
+                if(e.loaded == e.total){
+                    progressBar.style.width = '100%';
+                    progressBar.innerHTML = '100%';
+                }
+            };
+        })(files[i], progressBar));
+
+        request.open('POST', '/upload');
+        request.send(formData);
+    }
+});
+
+document.querySelector('#file').addEventListener('change', function(e) {
+    var list = document.getElementById('fileList');
+    list.innerHTML = ''; // Clear the list
+    for (var i = 0; i < this.files.length; i++) {
+        var listItem = document.createElement('li');
+        listItem.textContent = this.files[i].name;
+        list.appendChild(listItem);
+    }
+});
+  document.querySelector('#uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    document.getElementById('loading').style.display = 'block'; // Show the loading screen
+    var formData = new FormData(e.target);
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    }).then(function(response) {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        // Reload the to get the new uploaded files
+        window.location.reload();
+    
+    }).catch(function(error) {
+        console.error('There has been a problem with your fetch operation: ', error);
+        document.getElementById('loading').style.display = 'none'; // Hide the loading screen
+    });
+});
+</script>
+</body>
+  
+</html>
