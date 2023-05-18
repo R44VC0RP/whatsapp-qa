@@ -13,6 +13,8 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')
 
+# Local API key for testing
+
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 #pdf = "pdf/Full Dataset.pdf"

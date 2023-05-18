@@ -64,3 +64,4 @@ werkzeug==2.2.2; python_version >= "3.8" and python_version < "4.0"
 yarl==1.8.2; python_version >= "3.8" and python_version < "4.0" and python_full_version >= "3.8.1"
 gunicorn
 pinecone-client
+openai
