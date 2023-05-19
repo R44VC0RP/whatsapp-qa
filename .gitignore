@@ -1,3 +1,4 @@
 
 .env
 old_requirements.txt
+*.pyc
