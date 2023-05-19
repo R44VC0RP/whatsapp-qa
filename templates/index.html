@@ -13,8 +13,8 @@
     <h1 class="header">Dashboard</h1>
     <div class="dropbox">
         <div class="intro">
-            <h4>No recent uploads</h4>
-            <p>Drag and drop to upload PDF files or create a new watch folder for auto-upload.</p>
+            <h3>Drag and drop to upload PDF files to create a new dataset from them. </h3>
+            <p>Note: All uploaded PDF files will be combined into a single dataset.</p>
         </div>
         <div class="upload-area">
             <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
@@ -44,6 +44,7 @@
             </div>
         </div>
         <div class="dataset-selection">
+            <hr>
     <h4>Select a Text Dataset:</h4>
     <form action="/select_dataset" method="post" id="datasetForm">
         {% for dataset in datasets %}

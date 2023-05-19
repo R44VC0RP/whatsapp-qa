@@ -115,6 +115,33 @@ input[type="radio"] {
   transition: background-color 0.3s ease-in-out;
 }
 
+input {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  font-family: inherit;
+	
+}
+
+hr {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  color: #3f4656;
+}
+
+.select-dataset-btn {
+	margin-top: 20px;
+	padding: 10px 20px;
+	background-color: #007bff;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s ease-in-out;
+  }
+
 .upload-btn:hover {
   background-color: #0056b3;
 }
