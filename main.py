@@ -71,7 +71,7 @@ def receive_message(message, responseNumber):
   translated_text, detected_language = detect_and_translate(message)
   # Your logic here
   print("User asked: {}".format(translated_text))
-  response = askText(translated_text)
+  response = ask(translated_text)
   print(response)
   if response == False:
     send_message(sandBoxNumber, "Your Selected Texts Pool is not working.",
