@@ -2,3 +2,6 @@
 .env
 old_requirements.txt
 *.pyc
+__pycache__/dataset.cpython-310.pyc
+__pycache__/dataset.cpython-310.pyc
+__pycache__/dataset.cpython-310.pyc

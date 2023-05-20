@@ -8,3 +8,9 @@ langchain==0.0.174
 openai
 python-dotenv
 gunicorn
+boto3
+scikit-learn
+tiktoken
+unstructured
+pdf2image
+azure.core

@@ -1,98 +1,47 @@
 from twilio.rest import Client
 from flask import Flask, request, render_template, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-from dataset import askText
+from dataset import preprocess_and_embed_texts, ask
 from googletrans import Translator
 import os
 from PyPDF2 import PdfReader
 import random
 import json
 import time
+from dotenv import load_dotenv
+from fileservices import DigitalOceanSpaces
+from PyPDF2 import PdfWriter, PdfFileReader
+# from boto3 import session
+# from botocore.client import Config
+
+load_dotenv()
+
+dosfile = DigitalOceanSpaces('exon-hosting', 'nyc3', 'https://nyc3.digitaloceanspaces.com', os.environ.get('ACCESS_ID'), os.environ.get('SECRET_KEY'))
+
+
+
+
+
+# Flask Setup -----------------------------------------------------------------------
 
 app = Flask(__name__)
 static_url_path = '/static'
 app.config['UPLOAD_FOLDER'] = 'PDFupload/'
 app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
 
+# Twilio Setup ----------------------------------------------------------------------
+
 # Your Twilio account SID and auth token
-account_sid = 'ACee4dbbd1a5e69ec1594f80e5b07be9dc'
-auth_token = 'f8ae17f3e2fba54b5c1a1526837e9553'
+account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+
 client = Client(account_sid, auth_token)
 
 sandBoxNumber = "whatsapp:+19046086893"
 twilioNumber = "whatsapp:+14155238886"
 
-# JSON Database -----------------------------------
-
-import json
 
 
-class JSONDatabase:
-  """
-  A class representing a simple local JSON database.
-  """
-
-  def __init__(self, filename):
-    """
-    Creates a new JSON database using the specified filename.
-
-    :param filename: The name of the JSON file to use for the database.
-    """
-
-    # Define the database file and load its contents
-    self.filename = filename
-    self.db = self._load_db()
-
-  def _load_db(self):
-    """
-    Loads the JSON database from the file.
-    If the file does not exist or is not valid JSON, returns an empty dictionary.
-
-    :return: A dictionary representing the JSON database.
-    """
-
-    try:
-      with open(self.filename, 'r') as f:
-        return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-      return {}
-
-  def _write_db(self):
-    """
-    Writes the JSON database to the file.
-    """
-
-    with open(self.filename, 'w') as f:
-      json.dump(self.db, f)
-
-  def add_item(self, key, value):
-    # Check if the database already contains an item with the specified key
-    if key in self.db:
-      # If it does, append the new value to the list of values for that key
-      self.db[key] = value
-      self._write_db()
-    else:
-      self.db[key] = value
-      self._write_db()
-
-  def read_item(self, key):
-    """Reads an item from the database with the specified key."""
-    return self.db.get(key, None)
-
-  def change_item(self, key, value):
-    """Changes the value of an item in the database with the specified key."""
-    if key in self.db:
-      self.db[key] = value
-      self._write_db()
-
-  def remove_item(self, key):
-    """Removes an item from the database with the specified key."""
-    if key in self.db:
-      del self.db[key]
-      self._write_db()
-
-
-db = JSONDatabase('database.json')
 # Text Translation Services ------------------------------------------------------------------
 
 
@@ -166,6 +115,8 @@ def allowed_file(filename):
          filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
+# File Handling -------------------------------------------------------------------
+
 # PYTHON FLASK APP -------------------------------------------------------------------
 
 
@@ -177,9 +128,6 @@ def sms_reply():
   receive_message(message_body, senderNumber)
 
 
-# Continue the previous python code
-
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
   # check if the post request has the file part
@@ -189,35 +137,59 @@ def upload_file():
   print("Starting the file upload process. ----------------------------------")
   full_text = ""
   files = request.files.getlist('file')
+  print(files)
+        
 
   # Use the user-provided dataset name instead of a random name
   dataset_name = request.form['dataset_name']
   print("Dataset name: {}".format(dataset_name))
-
+  allPDFs = []
   for file in files:
     if file and allowed_file(file.filename):
-      filename = dataset_name + "ID" + secure_filename(file.filename)
-      print("Uploading: {}".format(filename))
+      filename = dataset_name + "-ID-" + secure_filename(file.filename)
+      print("Processing: {}".format(filename))
       file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+      print("File path: {}".format(file_path))
       # Save the file with a new name
       file.save(file_path)
-      print("File saved: {}".format(file_path))
-      full_text += pdf_to_text(file_path)
-      print("Text extracted from file: {}".format(file_path))
+      print("File saved.")
+      allPDFs.append(file_path)
 
-  print("Writing extracted text to file.")
-  with open("datasets/" + dataset_name + ".txt", 'w') as f:
-    f.write(full_text)
-  print("Written to file: {}".format("datasets/" + dataset_name + ".txt"))
+      # upload_file(file, "pdf")
+      # print("File {} uploaded ".format(filename))
+      # downloadfile(filename, "pdf")
+      # full_text += pdf_to_text(file_path)
+      # print("Text extracted from file: {}".format(filename))
 
-  # Delete PDF files
-  print("Deleting the uploaded PDF files.")
+  # print("Writing extracted text to file.")
+  # with open(dataset_name + ".txt", "w") as text_file:
+  #   text_file.write(full_text)
+  # print("Uploading file to Digital Ocean Spaces.")
+  # dosfile.upload_file(dataset_name + ".txt", "datasets/plain/" + dataset_name + ".txt")
+  # print("Written to file: {}".format("datasets/" + dataset_name + ".txt"))
+
+  # Merging the PDF files
+  merger = PdfWriter()
+
+  for pdf in allPDFs:
+    merger.append(pdf)
+  
+  merger.write(dataset_name + ".pdf")
+  merger.close()
+
+  # Uploading the PDF file
+  print("Uploading the PDF file.")
+  dosfile.upload_file(dataset_name + ".pdf", "datasets/pdf/" + dataset_name + ".pdf")
+
+  # Deleting the PDF files
+  print("Deleting the PDF files.")
   for file in files:
-    filename = dataset_name + "ID" + secure_filename(file.filename)
-    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    print("Deleted file: {}".format(
-      os.path.join(app.config['UPLOAD_FOLDER'], filename)))
-
+    if file and allowed_file(file.filename):
+      filename = dataset_name + "-ID-" + secure_filename(file.filename)
+      file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+      os.remove(file_path)
+      print("Deleted file: {}".format(filename))
+  
   print("Redirecting to home.")
   return redirect("/", code=302)
 
@@ -225,32 +197,32 @@ def upload_file():
 @app.route('/select_dataset', methods=['POST'])
 def select_dataset():
   selected_dataset = request.form['dataset']
-  print(selected_dataset)
+  
   # Check to see if the selecteddataset exsits in the database
-  db.add_item('selected_dataset', selected_dataset)
+  fullpath = "datasets/pdf/" + selected_dataset + ".pdf"
+  print(preprocess_and_embed_texts(fullpath))
+
+
+  dosfile.db_write('selected_dataset', selected_dataset)
   return redirect("/", code=302)
 
 
 @app.route('/')
 def index():
+  
   datasets = []
-  for filename in os.listdir('datasets'):
-    if filename.endswith('.txt'):
-      with open('datasets/' + filename, 'r') as f:
-        count = len(f.read().splitlines())
-      datasets.append({
-        'name': filename[:-4],  # remove .txt extension
-        'count': count,
-      })
-  selected_dataset = db.read_item('selected_dataset')
-  return render_template('index.html',
-                         datasets=datasets,
-                         selected_dataset=selected_dataset)
+  # Get the files in the embeddings folder in datasets
+  datasetFiles = dosfile.list_files("datasets/pdf/")
+  
+  for filename in datasetFiles:
+    fname = filename.replace("datasets/pdf/", "").replace(".pdf", "")
+    datasets.append({
+      'name': fname,  # remove .txt extension
+    })
 
-
-@app.route('/upload_success/<filename>', methods=['GET'])
-def upload_success(filename):
-  return render_template('upload_success.html')
+  # Get the selected dataset from the database
+  selected_dataset = dosfile.db_read('selected_dataset')
+  return render_template('index.html', datasets=datasets, selected_dataset=selected_dataset)
 
 # This was for repl.it
 #if __name__ == "__main__":
@@ -260,3 +232,5 @@ def upload_success(filename):
 # This is for heroku
 if __name__ == "__main__":
     app.run(debug=True)
+
+

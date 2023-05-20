@@ -4,17 +4,26 @@ from langchain.llms import OpenAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.embeddings.openai import OpenAIEmbeddings
 import pinecone
+from langchain.document_loaders import UnstructuredPDFLoader, OnlinePDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.docstore.document import Document
+from sklearn.metrics.pairwise import cosine_similarity
 import os
-
+import openai
+from boto3 import session
+from botocore.client import Config
 import json
+from fileservices import DigitalOceanSpaces
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
+import time
 
 
+ACCESS_ID = os.environ.get('ACCESS_ID')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')
@@ -24,114 +33,83 @@ PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 #pdf = "pdf/Full Dataset.pdf"
+dosfile = DigitalOceanSpaces('exon-hosting', 'nyc3', 'https://nyc3.digitaloceanspaces.com', os.environ.get('ACCESS_ID'), os.environ.get('SECRET_KEY'))
 
 
-class JSONDatabase:
-  """
-  A class representing a simple local JSON database.
-  """
+def preprocess_and_embed_texts(dataset):
+    # Get all files in the PDF folder
+    # Download the file
+    dosfile.download_file("temp.pdf", dataset)
+    loader = UnstructuredPDFLoader("temp.pdf")
+    data = loader.load()
+    print (f'You have {len(data)} document(s) in your data')
+    print (f'There are {len(data[0].page_content)} characters in your document')
 
-  def __init__(self, filename):
-    """
-    Creates a new JSON database using the specified filename.
+    text_splitter = RecursiveCharacterTextSplitter(
+      chunk_size=1000, chunk_overlap=0)
+    texts = text_splitter.split_documents(data)
 
-    :param filename: The name of the JSON file to use for the database.
-    """
+    print (f'Now you have {len(texts)} documents')
 
-    # Define the database file and load its contents
-    self.filename = filename
-    self.db = self._load_db()
+    #print(texts)
+    pinecone.init(
+        api_key=PINECONE_API_KEY,  # find at app.pinecone.io
+        environment=PINECONE_API_ENV # next to api key in console
+    )
+    index_name = "exon-hostings"
+    namespace = "text"
+    # Time how long it takes to index the documents
+    totalStart = time.time()
+    start = time.time()
+    index = pinecone.Index(index_name)
+    index.delete(deleteAll='true', namespace=namespace)
+    Pinecone.from_texts(
+      [t.page_content for t in texts], embeddings,
+      index_name=index_name, namespace=namespace)
+    
+    return "Complete"
+    
+    
+    
+      
+      
 
-  def _load_db(self):
-    """
-    Loads the JSON database from the file.
-    If the file does not exist or is not valid JSON, returns an empty dictionary.
-
-    :return: A dictionary representing the JSON database.
-    """
-
-    try:
-      with open(self.filename, 'r') as f:
-        return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-      return {}
-
-  def _write_db(self):
-    """
-    Writes the JSON database to the file.
-    """
-
-    with open(self.filename, 'w') as f:
-      json.dump(self.db, f)
-
-  def add_item(self, key, value):
-    # Check if the database already contains an item with the specified key
-    if key in self.db:
-      # If it does, append the new value to the list of values for that key
-      self.db[key] = value
-      self._write_db()
-    else:
-      self.db[key] = value
-      self._write_db()
-
-  def read_item(self, key):
-    """Reads an item from the database with the specified key."""
-    return self.db.get(key, None)
-
-  def change_item(self, key, value):
-    """Changes the value of an item in the database with the specified key."""
-    if key in self.db:
-      self.db[key] = value
-      self._write_db()
-
-  def remove_item(self, key):
-    """Removes an item from the database with the specified key."""
-    if key in self.db:
-      del self.db[key]
-      self._write_db()
+      
 
 
-def checkTexts():
-  db = JSONDatabase('database.json')
-  textName = "datasets/" + db.read_item('selected_dataset') + '.txt'
-  print(textName)
-  if not os.path.exists(textName):
-    return False
+def ask(query):
+    index_name = "exon-hostings"
+    namespace = "text"
 
-  print("FOUND")
-  with open(textName, 'r') as f:
-    texts = f.read().splitlines()
+    totalStart = time.time()
+    docsearch = Pinecone.from_existing_index(index_name, embeddings)
+    end = time.time()
+    print(f"Indexing took {end - start} seconds")
 
-  return texts
+    start = time.time()
+    llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
+    chain = load_qa_chain(llm, chain_type="stuff")
+    end = time.time()
+    print(f"Loading the chain took {end - start} seconds")
+
+    #query = "What is webroot?"
+    start = time.time()
+    docs = docsearch.similarity_search(query,
+      namespace=namespace)
+    end = time.time()
+    print(f"Searching took {end - start} seconds")
+
+    start = time.time()
+    answer = chain.run(input_documents=docs, question=query)
+    end = time.time()
+    totalEnd = time.time()
+
+    print(f"Answering took {end - start} seconds")
+    print(f"Total time: {totalEnd - totalStart} seconds")
+    # Format the answer so that it's easier to read and there isnt any extra newlines or spaces before the answer
+    answer = answer.replace("\n", "")
+    return answer
 
 
-def askText(questionasked):
 
-  texts = checkTexts()
-  if texts == False:
-    return False
-  pinecone.init(
-    api_key=PINECONE_API_KEY,  # find at app.pinecone.io
-    environment=PINECONE_API_ENV  # next to api key in console
-  )
-
-  index_name = "testings"  # put in the name of your pinecone index here
-  docsearch = Pinecone.from_texts(texts, embeddings, index_name=index_name)
-  print("DocSeach Done")
-  #
-  #query = "What is the story behind the stoning of the Jamaraat?"
-  #docs = docsearch.similarity_search(query)
-  #print(docs[0].page_content[:450])
-
-  llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
-  chain = load_qa_chain(llm, chain_type="stuff")
-  print("LLM Loaded")
-  print("Asking {} to the AI.".format(questionasked))
-  docs = docsearch.similarity_search(questionasked)
-  print(docs)
-  print("Similarity Seach Completed")
-
-  prompt = "You are a assistance bot. The user has asked the question {}. If you do not know the answer say, im sorry I do not know the answer to that.".format(
-    questionasked)
-  print("Asking {}".format(prompt))
-  return chain.run(input_documents=docs, question=prompt)
+#print(ask("What folder is gunicorn in?"))

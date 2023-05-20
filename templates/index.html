@@ -51,7 +51,7 @@
         <div class="dataset-option">
             <input type="radio" id="{{ dataset.name }}" name="dataset" value="{{ dataset.name }}"
                 {% if dataset.name == selected_dataset %} checked {% endif %}>
-            <label for="{{ dataset.name }}">{{ dataset.name }}: {{ dataset.count }}</label>
+            <label for="{{ dataset.name }}">{{ dataset.name }}</label>
         </div>
         {% endfor %}
         <button type="submit" class="select-dataset-btn">Select Dataset</button>
@@ -62,6 +62,76 @@
 </div>
 <div id="loading">Uploading...</div>
 <script>
+document.querySelector('#uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    document.getElementById('loading').style.display = 'block'; // Show the loading screen
+    var files = document.querySelector('#file').files;
+    var fileList = document.getElementById('fileList');
+    var progressWrappers = document.getElementById('progress-wrappers');
+    fileList.innerHTML = ''; // Clear the list
+    progressWrappers.innerHTML = ''; // Clear the progress bars
+
+    var formData = new FormData();
+    var datasetName = document.querySelector('#dataset_name').value;
+    formData.append('dataset_name', datasetName); // Append the dataset name
+
+    for (var i = 0; i < files.length; i++) {
+        var listItem = document.createElement('li');
+        listItem.textContent = files[i].name;
+        fileList.appendChild(listItem);
+
+        var progressWrapper = document.createElement('div');
+        progressWrapper.className = 'progress-wrapper';
+        var progressBar = document.createElement('div');
+        progressBar.id = 'progress-bar-' + i;
+        progressBar.className = 'progress';
+        progressWrapper.appendChild(progressBar);
+        progressWrappers.appendChild(progressWrapper);
+
+        formData.append('file', files[i]);
+    }
+
+    var request = new XMLHttpRequest();
+    request.upload.addEventListener('progress', function(e) {
+        var totalSize = Array.from(files).reduce((total, file) => total + file.size, 0);
+        if (e.loaded <= totalSize) {
+            var percent = Math.round(e.loaded / totalSize * 100);
+            Array.from(progressWrappers.children).forEach(function(progressBar) {
+                progressBar.children[0].style.width = percent + '%';
+                progressBar.children[0].innerHTML = percent + '%';
+            });
+        }
+        if(e.loaded == e.total){
+            Array.from(progressWrappers.children).forEach(function(progressBar) {
+                progressBar.children[0].style.width = '100%';
+                progressBar.children[0].innerHTML = '100%';
+            });
+        }
+    });
+
+    request.addEventListener('load', function() {
+        // Hide the loading screen and reload the page when the request is done
+        document.getElementById('loading').style.display = 'none';
+        window.location.reload();
+    });
+
+    request.open('POST', '/upload');
+    request.send(formData);
+});
+
+document.querySelector('#file').addEventListener('change', function(e) {
+    var list = document.getElementById('fileList');
+    list.innerHTML = ''; // Clear the list
+    for (var i = 0; i < this.files.length; i++) {
+        var listItem = document.createElement('li');
+        listItem.textContent = this.files[i].name;
+        list.appendChild(listItem);
+    }
+});
+</script>
+
+        
+<!--<script>
   document.querySelector('#uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
     document.getElementById('loading').style.display = 'block'; // Show the loading screen
@@ -136,7 +206,7 @@ document.querySelector('#file').addEventListener('change', function(e) {
         document.getElementById('loading').style.display = 'none'; // Hide the loading screen
     });
 });
-</script>
+</script>-->
 </body>
   
 </html>
