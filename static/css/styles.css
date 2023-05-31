@@ -68,14 +68,12 @@
 }
 
 input[type="radio"] {
-  
-    position: absolute;
     opacity: 0;
     pointer-events: none;
 }
 
 .dataset-option  label{
-  display: flex;
+  
   align-items: center;
   justify-content: space-between;
   padding: 10px;
@@ -84,6 +82,44 @@ input[type="radio"] {
   cursor: pointer;
   transition: all 0.3s ease-in-out;
 }
+
+.chat-window {
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	width: 600px;
+	height: 400px;
+	background-color: #f1f1f1;
+	border-left: 1px solid #ccc;
+	padding: 10px;
+	border-radius: 5px 0 0 0;
+  }
+  
+  .chat-messages {
+	height: 80%;
+	overflow-y: scroll;
+  }
+  
+  .chat-input {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 10px;
+  }
+  
+  .chat-input input {
+	flex: 1;
+	margin-right: 10px;
+  }
+  
+  .send-button {
+	background-color: #4CAF50;
+	color: white;
+	border: none;
+	padding: 10px;
+	border-radius: 5px;
+	cursor: pointer;
+  }
 
 .progress-wrapper {
     width:100%;
@@ -546,7 +582,7 @@ hr {
 	 box-sizing: inherit;
 }
  body {
-	 min-height: 100vh;
+	 max-width: -webkit-fill-available;
 	 font-family: Roboto, Arial;
 	 display: flex;
 	 justify-content: center;

@@ -11,6 +11,7 @@ import time
 from dotenv import load_dotenv
 from fileservices import DigitalOceanSpaces
 from PyPDF2 import PdfWriter, PdfFileReader
+from flask import jsonify
 # from boto3 import session
 # from botocore.client import Config
 
@@ -141,7 +142,11 @@ def upload_file():
         
 
   # Use the user-provided dataset name instead of a random name
+@app.route('/select_dataset', methods=['POST'])
+def select_dataset():
   dataset_name = request.form['dataset_name']
+  # Do something with the dataset name, such as processing it or storing it in a database
+  #return jsonify({'message': f'Selected dataset: {dataset_name}'})
   print("Dataset name: {}".format(dataset_name))
   allPDFs = []
   for file in files:
@@ -193,6 +198,26 @@ def upload_file():
   print("Redirecting to home.")
   return redirect("/", code=302)
 
+@app.route('/send_chat', methods=['POST'])
+def send_message():
+  message = request.json['message']
+  # Do something with the message, such as processing it or storing it in a database
+  response = ask(message)
+  print("User asked: {} and System Responded with {}".format(message, response))
+  if response == False:
+    return jsonify({'message': 'The system crashed, please contact your admin.'})
+  else:
+    return jsonify({'message': response})
+
+
+
+
+
+
+  print(message)
+  response = {'message': f'You sent: {message}'}
+  return jsonify(response)
+
 
 @app.route('/select_dataset', methods=['POST'])
 def select_dataset():
@@ -227,6 +252,8 @@ def index():
 # This was for repl.it
 #if __name__ == "__main__":
 #app.run(host='0.0.0.0', port=81, debug=True)
+
+
 
 
 # This is for heroku

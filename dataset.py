@@ -30,7 +30,11 @@ PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')
 
 # Local API key for testing
 
-embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+
+
+client = openai.api.DefaultApi()
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, client=client)
+#embeddings = OpenAIEmbeddings(OPENAI_API_KEY)
 
 #pdf = "pdf/Full Dataset.pdf"
 dosfile = DigitalOceanSpaces('exon-hosting', 'nyc3', 'https://nyc3.digitaloceanspaces.com', os.environ.get('ACCESS_ID'), os.environ.get('SECRET_KEY'))
@@ -84,10 +88,11 @@ def ask(query):
     totalStart = time.time()
     docsearch = Pinecone.from_existing_index(index_name, embeddings)
     end = time.time()
-    print(f"Indexing took {end - start} seconds")
+    print(f"Indexing took {end - totalStart} seconds")
 
     start = time.time()
-    llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
+    #llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
+    llm = OpenAI(temperature=0.5, openai_api_key=OPENAI_API_KEY)
     chain = load_qa_chain(llm, chain_type="stuff")
     end = time.time()
     print(f"Loading the chain took {end - start} seconds")
@@ -112,4 +117,4 @@ def ask(query):
 
 
 
-#print(ask("What folder is gunicorn in?"))
+print(ask("What folder is gunicorn in?"))
