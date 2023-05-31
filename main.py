@@ -3,7 +3,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 from dataset import preprocess_and_embed_texts, ask
 from googletrans import Translator
-from google_trans_new import google_translator  
+
 import os
 from PyPDF2 import PdfReader
 import random
