@@ -83,7 +83,7 @@ def preprocess_and_embed_texts(dataset):
 def ask(query):
     index_name = "exon-hostings"
     namespace = "text"
-
+    start = time.time()
     totalStart = time.time()
     docsearch = Pinecone.from_existing_index(index_name, embeddings)
     # Find the existing index in pinecone so that it can be used for similarity search.
