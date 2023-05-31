@@ -3,6 +3,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 from dataset import preprocess_and_embed_texts, ask
 from googletrans import Translator
+from google_trans_new import google_translator  
 import os
 from PyPDF2 import PdfReader
 import random
@@ -54,7 +55,10 @@ def detect_and_translate(text):
 
 
 def translate_to_language(text, target_language):
-  translator = Translator()
+  translator = Translator(service_urls=[
+      'translate.google.com'
+    ])
+  print("Translating {} to {}".format(target_language, text))
   result = translator.translate(text, dest=target_language)
   return result.text
 
@@ -233,6 +237,9 @@ def index():
 
 # This is for heroku
 if __name__ == "__main__":
+    message = "Twilio Status Check."
+    mes2, lang = detect_and_translate(message)
+    send_message(sandBoxNumber, mes2, lang)
     app.run(debug=True)
 
 
