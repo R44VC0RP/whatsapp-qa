@@ -122,6 +122,8 @@ def allowed_file(filename):
 
 @app.route("/sms", methods=['POST'])  # Python Messaging Recive Messaging SMS
 def sms_reply():
+  send_message(sandBoxNumber, "Your Selected Texts Pool is working.", "en")
+  send_message(sandBoxNumber, "User asked: {}".format(request.form['Body']), "en")
   senderNumber = request.form['From']
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
