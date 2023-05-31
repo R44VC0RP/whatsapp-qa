@@ -67,6 +67,9 @@ def preprocess_and_embed_texts(dataset):
       [t.page_content for t in texts], embeddings,
       index_name=index_name, namespace=namespace)
     
+    # This creates the index in pinecone so that it can be easily called later when a user asks a query.
+    
+    
     return "Complete"
     
     
@@ -83,6 +86,8 @@ def ask(query):
 
     totalStart = time.time()
     docsearch = Pinecone.from_existing_index(index_name, embeddings)
+    # Find the existing index in pinecone so that it can be used for similarity search.
+
     end = time.time()
     print(f"Indexing took {end - start} seconds")
 
@@ -112,4 +117,25 @@ def ask(query):
 
 
 
-#print(ask("What folder is gunicorn in?"))
+
+# Environment Configuration: The script begins with importing necessary modules and loading environment variables from a .env 
+# file using the dotenv module. These variables include API keys for OpenAI and Pinecone, as well as access credentials for 
+
+# DigitalOcean Spaces.
+# Setting Up Services: An instance of DigitalOceanSpaces is created to interact with DigitalOcean Spaces, and an instance of 
+# OpenAIEmbeddings is created for generating embeddings using the OpenAI API.
+
+# Text Preprocessing and Embedding: The function preprocess_and_embed_texts is responsible for loading a PDF file from a 
+# DigitalOcean Spaces bucket, splitting the document into chunks, and creating vector embeddings for these chunks. 
+# These embeddings are stored in a Pinecone index for later similarity search. The function uses UnstructuredPDFLoader 
+# for loading the PDF, RecursiveCharacterTextSplitter for splitting the text into chunks, and Pinecone's APIs for creating 
+# the index and storing embeddings.
+
+# Question Answering: The function ask performs a question-answering task. It loads a pre-existing Pinecone index, performs a 
+# similarity search in the index for documents related to the query, and uses an OpenAI language model to generate an answer 
+# based on the query and the retrieved documents. It makes use of OpenAI's API for the language model, and Pinecone's API for 
+# the similarity search.
+# This script is a good demonstration of how to build a question-answering system using state-of-the-art services such as 
+# OpenAI and Pinecone. To get a better understanding of how the system works, it would be beneficial to familiarize yourself 
+# with the langchain library (which seems to be a custom library specific to this project), OpenAI's API and language models, 
+# Pinecone's vector indexing and similarity search service, and DigitalOcean Spaces for file storage.

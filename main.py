@@ -234,3 +234,25 @@ if __name__ == "__main__":
     app.run(debug=True)
 
 
+
+
+
+# Flask application that provides services for handling incoming SMS messages, file uploads, and dataset selection. 
+# It interacts with several external APIs and services, such as Twilio, Google Translate, PyPDF2, and DigitalOcean Spaces. Let's break down the key features:
+# Twilio Messaging: This application uses the Twilio API for handling incoming SMS messages and replying to them. 
+# The function sms_reply is mapped to the "/sms" route and handles POST requests. When a POST request is made to this route (which typically happens when a new SMS is received), it takes the body of the message and the sender's phone number, translates the received message, generates a response, and sends this response back to the sender.
+# File Upload and Handling: The application also allows users to upload files to the server. 
+# The function upload_file handles these uploads, ensuring only PDFs are accepted. 
+# It generates a new, unique name for each uploaded file, saves them to a local directory, 
+# processes the text within the PDFs, merges them into one single file, and finally uploads the merged file to a 
+# DigitalOcean Spaces storage bucket.
+# Dataset Selection: The application also provides an endpoint '/select_dataset' that allows users to select a dataset for 
+# further operations. The name of the selected dataset is stored in the DigitalOcean Spaces database.
+# PDF Text Extraction: The pdf_to_text function is responsible for converting the content of uploaded PDFs into plain text.
+# Translation Services: Google Translate API is used in this application to detect and translate text. 
+# The functions detect_and_translate and translate_to_language are used for these purposes respectively.
+# Index Page Rendering: The root route of the application ("/") renders an index page that lists available datasets and 
+# the currently selected dataset.
+# To understand the application better, it's recommended to familiarize yourself with the Flask framework, Twilio API, 
+# Google Translate API, PyPDF2 library, and DigitalOcean Spaces API. Also, it would be beneficial to understand how the 
+# files are structured and organized in the project.
