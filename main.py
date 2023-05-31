@@ -17,6 +17,8 @@ from PyPDF2 import PdfWriter, PdfFileReader
 
 load_dotenv()
 
+
+
 dosfile = DigitalOceanSpaces('exon-hosting', 'nyc3', 'https://nyc3.digitaloceanspaces.com', os.environ.get('ACCESS_ID'), os.environ.get('SECRET_KEY'))
 
 
@@ -240,6 +242,7 @@ if __name__ == "__main__":
     message = "Twilio Status Check."
     mes2, lang = detect_and_translate(message)
     send_message(sandBoxNumber, mes2, lang)
+
     app.run(debug=True)
 
 

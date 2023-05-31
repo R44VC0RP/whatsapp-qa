@@ -29,7 +29,7 @@ PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 PINECONE_API_ENV = os.environ.get('PINECONE_API_ENV')
 
 # Local API key for testing
-
+print(PINECONE_API_ENV, PINECONE_API_KEY)
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 #pdf = "pdf/Full Dataset.pdf"
@@ -85,6 +85,10 @@ def ask(query):
     namespace = "text"
     start = time.time()
     totalStart = time.time()
+    pinecone.init(
+        api_key=PINECONE_API_KEY,  # find at app.pinecone.io
+        environment=PINECONE_API_ENV # next to api key in console
+    )
     docsearch = Pinecone.from_existing_index(index_name, embeddings)
     # Find the existing index in pinecone so that it can be used for similarity search.
 
