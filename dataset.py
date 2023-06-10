@@ -6,8 +6,8 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 import pinecone
 from langchain.document_loaders import UnstructuredPDFLoader, OnlinePDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
-from sklearn.metrics.pairwise import cosine_similarity
+
+
 import os
 import openai
 from boto3 import session

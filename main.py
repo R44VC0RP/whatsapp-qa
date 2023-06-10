@@ -1,7 +1,8 @@
 from twilio.rest import Client
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
-from dataset import preprocess_and_embed_texts, ask
+#from dataset import preprocess_and_embed_texts, ask
+from datasetv3 import preprocess_and_embed_texts, ask
 from googletrans import Translator
 
 import os
@@ -77,7 +78,7 @@ def receive_message(message, responseNumber):
   translated_text, detected_language = detect_and_translate(message)
   # Your logic here
   print("User asked: {}".format(translated_text))
-  response = ask(translated_text)
+  response = ask(translated_text, responseNumber)
   print(response)
   if response == False:
     send_message(sandBoxNumber, "Your Selected Texts Pool is not working.",
@@ -124,7 +125,20 @@ def allowed_file(filename):
 # File Handling -------------------------------------------------------------------
 
 # PYTHON FLASK APP -------------------------------------------------------------------
+@app.route('/send_chat', methods=['POST'])
+def send_chat():
+  message = request.json['message']
+  # Do something with the message, such as processing it or storing it in a database
+  response = ask(message)
+  print("User asked: {} and System Responded with {}".format(message, response))
+  if response == False:
+    return jsonify({'message': 'The system crashed, please contact your admin.'})
+  else:
+    return jsonify({'message': response})
 
+  print(message)
+  response = {'message': f'You sent: {message}'}
+  return jsonify(response)
 
 @app.route("/sms", methods=['POST'])  # Python Messaging Recive Messaging SMS
 def sms_reply():
