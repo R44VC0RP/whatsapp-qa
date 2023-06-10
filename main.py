@@ -13,6 +13,7 @@ import time
 from dotenv import load_dotenv
 from fileservices import DigitalOceanSpaces
 from PyPDF2 import PdfWriter, PdfFileReader
+import logging
 # from boto3 import session
 # from botocore.client import Config
 
@@ -44,7 +45,7 @@ client = Client(account_sid, auth_token)
 sandBoxNumber = "whatsapp:+19046086893"
 twilioNumber = "whatsapp:+14155238886"
 
-
+logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 # Text Translation Services ------------------------------------------------------------------
 
@@ -142,6 +143,8 @@ def send_chat():
 
 @app.route("/sms", methods=['POST'])  # Python Messaging Recive Messaging SMS
 def sms_reply():
+  logging.info("Starting the SMS reply process. ----------------------------------")
+  logging.info("User asked: {}".format(request.form['Body']))
   print("Starting the SMS reply process. ----------------------------------")
   send_message(sandBoxNumber, "Your Selected Texts Pool is working.", "en")
   send_message(sandBoxNumber, "User asked: {}".format(request.form['Body']), "en")
@@ -232,6 +235,7 @@ def select_dataset():
 
 @app.route('/')
 def index():
+  logging.info("Starting the index process. ----------------------------------")
   print("Starting the index process. ----------------------------------")
   datasets = []
   # Get the files in the embeddings folder in datasets
