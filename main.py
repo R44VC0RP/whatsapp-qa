@@ -232,7 +232,7 @@ def select_dataset():
 
 @app.route('/')
 def index():
-  
+  print("Starting the index process. ----------------------------------")
   datasets = []
   # Get the files in the embeddings folder in datasets
   datasetFiles = dosfile.list_files("datasets/pdf/")
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     mes2, lang = detect_and_translate(message)
     send_message(sandBoxNumber, mes2, lang)
 
-    app.run(debug=True)
+    app.run()
 
 
 
