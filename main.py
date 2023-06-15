@@ -146,8 +146,7 @@ def sms_reply():
   logging.info("Starting the SMS reply process. ----------------------------------")
   logging.info("User asked: {}".format(request.form['Body']))
   print("Starting the SMS reply process. ----------------------------------")
-  send_message(sandBoxNumber, "Your Selected Texts Pool is working.", "en")
-  send_message(sandBoxNumber, "User asked: {}".format(request.form['Body']), "en")
+  print("User asked: {}".format(request.form['Body']))
   senderNumber = request.form['From']
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
