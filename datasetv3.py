@@ -311,17 +311,3 @@ def ask(query, phone):
     return answer
 
 
-
-questions = [
-    "What is hajj?",
-    "What’s muzdalifa?",
-    "What’s the procedures?",
-    "What’s the emergency number?",
-    "Where is the lost and found?",
-    "Bagaimana cara menunaikan ibadah haji?",
-    "What are the Tawaf Dua?"
-]
-
-while True:
-    question = input("Question: ")
-    print(ask(question, "whatsapp:+1234567890"))
