@@ -25,7 +25,7 @@ dosfile = DigitalOceanSpaces('exon-hosting', 'nyc3', 'https://nyc3.digitaloceans
 
 
 
-
+print("Starting the Flask App. ----------------------------------")
 
 # Flask Setup -----------------------------------------------------------------------
 
@@ -70,9 +70,14 @@ def translate_to_language(text, target_language):
 # Twilio Messaging Services ------------------------------------------------------------------
 
 
+def send_twilio_message(to, body):
+  print("Sending message: {}".format(body))
+  client.messages.create(to=to, from_=twilioNumber, body=body)
+
 def send_message(to, body, detected_language):
   translated_text = translate_to_language(body, detected_language)
-  client.messages.create(to=to, from_=twilioNumber, body=translated_text)
+  send_twilio_message(to, translated_text)
+  
 
 
 def receive_message(message, responseNumber):
@@ -218,7 +223,6 @@ def upload_file():
   print("Redirecting to home.")
   return redirect("/", code=302)
 
-
 @app.route('/select_dataset', methods=['POST'])
 def select_dataset():
   selected_dataset = request.form['dataset']
@@ -230,7 +234,6 @@ def select_dataset():
 
   dosfile.db_write('selected_dataset', selected_dataset)
   return redirect("/", code=302)
-
 
 @app.route('/')
 def index():
@@ -257,10 +260,7 @@ def index():
 
 # This is for heroku
 if __name__ == "__main__":
-    message = "Twilio Status Check."
-    mes2, lang = detect_and_translate(message)
-    send_message(sandBoxNumber, mes2, lang)
-
+    print("Starting the application. ----------------------------------")
     app.run()
 
 

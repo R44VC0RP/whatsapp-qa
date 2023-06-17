@@ -7,14 +7,18 @@ import pinecone
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
+
 import os
 import openai
-from boto3 import session
-from botocore.client import Config
 import json
 from fileservices import DigitalOceanSpaces
 import mysql.connector
 from dotenv import load_dotenv
+import logging
+
+# Add this near the start of your code
+logging.basicConfig(level=logging.DEBUG)
+
 
 load_dotenv()
 # import mysql connector
@@ -40,7 +44,8 @@ MYSQL_PORT = os.environ.get('MYSQL_PORT')
 MYSQL_USER = os.environ.get('MYSQL_USER')
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE')
-MYSQL_SSL = os.environ.get('MYSQL_SSLMODE')
+
+
 
 # Set up the OpenAI API
 openai.api_key = OPENAI_API_KEY
@@ -51,8 +56,11 @@ openai.api_key = OPENAI_API_KEY
 
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
+
 #pdf = "pdf/Full Dataset.pdf"
 dosfile = DigitalOceanSpaces('exon-hosting', 'nyc3', 'https://nyc3.digitaloceanspaces.com', os.environ.get('ACCESS_ID'), os.environ.get('SECRET_KEY'))
+
+
 
 
 def preprocess_and_embed_texts(dataset):
@@ -98,6 +106,8 @@ def cx_message_history(clientid, message, addorget):
         port=MYSQL_PORT,
         password=MYSQL_PASSWORD,
         database=MYSQL_DATABASE
+        
+        
     ) as cnx:
         with cnx.cursor() as cursor:
             cursor.execute("SELECT * FROM cx_messaging WHERE cx_id = %s", (clientid,))
@@ -125,7 +135,8 @@ def run_query(query):
         user=MYSQL_USER,
         port=MYSQL_PORT,
         password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE
+        database=MYSQL_DATABASE,
+        ssl_disabled=MYSQL_SSL
     )
     cursor = cnx.cursor()
     cursor.execute(query)
@@ -136,58 +147,60 @@ def run_query(query):
     cnx.close()
     print(result)
 
-def add_cx_to_db(clientid, name, phone):
-    with mysql.connector.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        port=MYSQL_PORT,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE
-    ) as cnx:
-        with cnx.cursor() as cursor:
-            cursor.execute("SELECT * FROM cx_messaging WHERE cx_id = %s", (clientid,))
-            if cursor.fetchone() is not None:
-                print("Client ID already exists")
-                return False  # client id already exists
-            print("Client ID does not exist")
-            print("SQL: INSERT INTO cx_messaging (cx_phone, cx_name, cx_id, cx_messagehistory) VALUES (%s, %s, %s, '')", (phone, name, clientid))
-            cursor.execute(
-                "INSERT INTO cx_messaging (cx_phone, cx_name, cx_id, cx_messagehistory) VALUES (%s, %s, %s, '')",
-                (phone, name, clientid)
-            )
-            cnx.commit()
-            return True   
+def add_cx_to_db(clientid, phone, name):
+    try:
+        logging.debug("Trying to connect to the MySQL server...")
+        cnx = mysql.connector.connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            port=MYSQL_PORT,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE
+            
+            
+        )
+        logging.debug("Connected to the MySQL server.")
+    except Exception as e:
+        logging.error("Failed to connect to the MySQL server: %s", e)
+        return False
 
-def get_cx_from_db(clientid):
-    if clientid == None or clientid == "all":
-        # Return a list of all clients
-        with mysql.connector.connect(
-            host=MYSQL_HOST,
-            user=MYSQL_USER,
-            port=MYSQL_PORT,
-            password=MYSQL_PASSWORD,
-            database=MYSQL_DATABASE
-        ) as cnx:
-            with cnx.cursor() as cursor:
-                cursor.execute("SELECT * FROM cx_messaging")
-                result = cursor.fetchall()
-                return result
-    else:
-        with mysql.connector.connect(
-            host=MYSQL_HOST,
-            user=MYSQL_USER,
-            port=MYSQL_PORT,
-            password=MYSQL_PASSWORD,
-            database=MYSQL_DATABASE
-        ) as cnx:
-            try:
-                with cnx.cursor() as cursor:
-                    cursor.execute("SELECT * FROM cx_messaging WHERE cx_id = %s", (clientid,))
-                    result = cursor.fetchone()
-                    phone, name, id, messagehistory = result
-                    return phone, name, id, messagehistory
-            except:
-                return False
+    try:
+        logging.debug("Trying to get a cursor from the connection...")
+        cursor = cnx.cursor()
+        logging.debug("Got a cursor.")
+    except Exception as e:
+        logging.error("Failed to get a cursor from the connection: %s", e)
+        return False
+
+    try:
+        logging.debug("Executing SELECT statement...")
+        cursor.execute("SELECT * FROM cx_messaging WHERE cx_id = %s", (clientid,))
+        logging.debug("Executed SELECT statement.")
+        if cursor.fetchone() is not None:
+            logging.debug("Client ID already exists")
+            return False  # client id already exists
+        logging.debug("Client ID does not exist")
+        logging.debug("SQL: INSERT INTO cx_messaging (cx_phone, cx_name, cx_id, cx_messagehistory) VALUES (%s, %s, %s, '')", (phone, name, clientid))
+        logging.debug("Executing INSERT statement...")
+        cursor.execute(
+            "INSERT INTO cx_messaging (cx_phone, cx_name, cx_id, cx_messagehistory) VALUES (%s, %s, %s, '')",
+            (phone, name, clientid)
+        )
+        logging.debug("Executed INSERT statement.")
+        cnx.commit()
+        logging.debug("Committed the transaction.")
+    except Exception as e:
+        logging.error("Failed to execute SQL statement: %s", e)
+        return False
+
+    finally:
+        # Close your cursor and connection whether it was successful or not
+        logging.debug("Closing cursor and connection...")
+        cursor.close()
+        cnx.close()
+        logging.debug("Closed cursor and connection.")
+
+    return True
 import time
 
 def gpt4query(prompt):
@@ -219,7 +232,7 @@ def gpt3query(clientid, query, max_tokens=4096):
     print(f"Time taken for calculating tokens and removing old messages: {end_time - start_time} seconds")
 
     start_time = time.time()
-    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",max_tokens=256,messages=message_history) # Send the prompt to GPT-3 and get a response
+    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo-16k",max_tokens=256,messages=message_history) # Send the prompt to GPT-3 and get a response
     end_time = time.time()
     print(f"Time taken for GPT-3.5-turbo to respond: {end_time - start_time} seconds")
 
@@ -256,11 +269,6 @@ def ask(query, phone):
     end = time.time()
     print(f"Indexing took {end - start} seconds")
 
-    start = time.time()
-    llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
-    chain = load_qa_chain(llm, chain_type="stuff")
-    end = time.time()
-    print(f"Loading the chain took {end - start} seconds")
 
     #query = "What is webroot?"
     start = time.time()
@@ -296,4 +304,6 @@ def ask(query, phone):
     # Format the answer so that it's easier to read and there isnt any extra newlines or spaces before the answer
     answer = answer.replace("\n", "")
     return answer
+
+
 
