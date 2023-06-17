@@ -6,7 +6,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 import pinecone
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-
+import re
 
 import os
 import openai
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 import logging
 
 # Add this near the start of your code
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 
 load_dotenv()
@@ -232,7 +232,7 @@ def gpt3query(clientid, query, max_tokens=4096):
     print(f"Time taken for calculating tokens and removing old messages: {end_time - start_time} seconds")
 
     start_time = time.time()
-    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo-16k",max_tokens=256,messages=message_history) # Send the prompt to GPT-3 and get a response
+    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",max_tokens=256,messages=message_history) # Send the prompt to GPT-3 and get a response
     end_time = time.time()
     print(f"Time taken for GPT-3.5-turbo to respond: {end_time - start_time} seconds")
 
@@ -294,6 +294,10 @@ def ask(query, phone):
     start = time.time()
     
     assemblePrompt = "You are a Hajj bot, you will help people understand the events and meaning of Hajj, you will answer the question: {} by using the following '{}'. Answer the question in 3 sentances or less.".format(query, fulltext)
+    # Format prompt so that there are not non alpha and numeric characters
+    
+    assemblePrompt = re.sub(r'[^a-zA-Z0-9 ]', '', assemblePrompt)
+    print(assemblePrompt)
     answer = gpt3query(cx_id, assemblePrompt)
     #answer = chain.run(input_documents=docs, question=query)
     end = time.time()
@@ -303,7 +307,21 @@ def ask(query, phone):
     print(f"Total time: {totalEnd - totalStart} seconds")
     # Format the answer so that it's easier to read and there isnt any extra newlines or spaces before the answer
     answer = answer.replace("\n", "")
+    
     return answer
 
 
 
+questions = [
+    "What is hajj?",
+    "What’s muzdalifa?",
+    "What’s the procedures?",
+    "What’s the emergency number?",
+    "Where is the lost and found?",
+    "Bagaimana cara menunaikan ibadah haji?",
+    "What are the Tawaf Dua?"
+]
+
+while True:
+    question = input("Question: ")
+    print(ask(question, "whatsapp:+1234567890"))

@@ -253,14 +253,12 @@ def index():
   selected_dataset = dosfile.db_read('selected_dataset')
   return render_template('index.html', datasets=datasets, selected_dataset=selected_dataset)
 
-# This was for repl.it
-#if __name__ == "__main__":
-#app.run(host='0.0.0.0', port=81, debug=True)
 
 
 # This is for heroku
 if __name__ == "__main__":
     print("Starting the application. ----------------------------------")
+    
     app.run()
 
 
