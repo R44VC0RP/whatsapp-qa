@@ -72,9 +72,11 @@ def translate_to_language(text, target_language):
 
 
 def send_twilio_message(to, body):
-  print("Sending message: {}".format(body))
+  print("Sending message '{}' to {}".format(body, to))
   try:
-    client.messages.create(to=to, from_=twilioNumber, body=body)
+    message = client.messages.create(to=to, from_=twilioNumber, body=body)
+    print("Message sent successfully.")
+    print(message.sid)
   except TwilioRestException as e:
     print(f"Failed to send message. Error: {e}")
 
