@@ -1,4 +1,5 @@
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 #from dataset import preprocess_and_embed_texts, ask
@@ -72,7 +73,10 @@ def translate_to_language(text, target_language):
 
 def send_twilio_message(to, body):
   print("Sending message: {}".format(body))
-  client.messages.create(to=to, from_=twilioNumber, body=body)
+  try:
+    client.messages.create(to=to, from_=twilioNumber, body=body)
+  except TwilioRestException as e:
+    print(f"Failed to send message. Error: {e}")
 
 def send_message(to, body, detected_language):
   translated_text = translate_to_language(body, detected_language)
