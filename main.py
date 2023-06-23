@@ -44,7 +44,7 @@ auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
 client = Client(account_sid, auth_token)
 
 sandBoxNumber = "whatsapp:+19046086893"
-twilioNumber = "whatsapp:+14155238886"
+twilioNumber = "whatsapp:+18449490998"
 
 logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
