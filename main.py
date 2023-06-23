@@ -43,7 +43,7 @@ auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
 client = Client(account_sid, auth_token)
 
 sandBoxNumber = "whatsapp:+19046086893"
-twilioNumber = "whatsapp:+18449490998"
+twilioNumber = "whatsapp:+14155238886"
 
 logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
@@ -258,7 +258,7 @@ def index():
 # This is for heroku
 if __name__ == "__main__":
     print("Starting the application. ----------------------------------")
-    
+    send_twilio_message("whatsapp:+9046086893", "Hello from Python!")
     app.run()
 
 
