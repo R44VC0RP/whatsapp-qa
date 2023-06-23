@@ -162,6 +162,7 @@ def sms_reply():
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
   receive_message(message_body, senderNumber)
+  return 'Message received', 200
 
 
 @app.route('/upload', methods=['POST'])
