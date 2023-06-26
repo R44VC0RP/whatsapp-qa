@@ -41,6 +41,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
 account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
 auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
 
+
 client = Client(account_sid, auth_token)
 
 sandBoxNumber = "whatsapp:+19046086893"
@@ -175,7 +176,7 @@ def sms_reply():
   senderNumber = request.form['From']
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
-  to,body = receive_message(message_body, senderNumber)
+  receive_message(message_body, senderNumber)
   # Create a TwiML response
   
 
@@ -280,7 +281,7 @@ def index():
 # This is for heroku
 if __name__ == "__main__":
     print("Starting the application. ----------------------------------")
-    send_twilio_message("whatsapp:+9046086893", "Hello from Python!")
+    send_twilio_message("whatsapp:+19046086893", "Hello from Python!")
     app.run()
 
 
