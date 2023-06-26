@@ -40,7 +40,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
 # Your Twilio account SID and auth token
 account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
 auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-print("Twilio Creds: {} {}".format(account_sid, auth_token)
+print("Twilio Creds: {} {}".format(account_sid, auth_token))
 
 client = Client(account_sid, auth_token)
 
@@ -178,7 +178,7 @@ def sms_reply():
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
   receive_message(message_body, senderNumber)
-  # Create a TwiML response
+  return "OK"
   
 
 
