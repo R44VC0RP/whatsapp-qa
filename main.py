@@ -79,10 +79,13 @@ def send_twilio_message(to, body):
     print(message.sid)
   except TwilioRestException as e:
     print(f"Failed to send message. Error: {e}")
+  
+  
 
 def send_message(to, body, detected_language):
   translated_text = translate_to_language(body, detected_language)
   send_twilio_message(to, translated_text)
+  return to, body
   
 
 
@@ -99,7 +102,9 @@ def receive_message(message, responseNumber):
                  "The system crashed, please contact your admin.",
                  detected_language)
   else:
-    send_message(responseNumber, response, detected_language)
+    to, body = send_message(responseNumber, response, detected_language)
+    return to, body
+    
 
 
 # PDF Handling -------------------------------------------------------------------
@@ -161,12 +166,9 @@ def sms_reply():
   senderNumber = request.form['From']
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
-  receive_message(message_body, senderNumber)
+  to,body = receive_message(message_body, senderNumber)
   # Create a TwiML response
-  twiml = '<?xml version="1.0" encoding="UTF-8"?>'
-  twiml += '<Response><Message>Message received</Message></Response>'
   
-  return Response(twiml, mimetype='text/xml')
 
 
 @app.route('/upload', methods=['POST'])
