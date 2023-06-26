@@ -74,7 +74,16 @@ def translate_to_language(text, target_language):
 def send_twilio_message(to, body):
   print("Sending message '{}' to {}".format(body, to))
   try:
-    message = client.messages.create(to=to, from_=twilioNumber, body=body)
+    message = client.messages.create(
+      from_='whatsapp:+14155238886',
+      body='Your appointment is coming up on July 21 at 3PM',
+      to='whatsapp:+19046086893'
+    )
+    message = client.messages.create(
+      from_=twilioNumber,
+      body=body, 
+      to=to
+    )
     print("Message sent successfully.")
     print(message.sid)
   except TwilioRestException as e:
@@ -85,7 +94,7 @@ def send_twilio_message(to, body):
 def send_message(to, body, detected_language):
   translated_text = translate_to_language(body, detected_language)
   send_twilio_message(to, translated_text)
-  return to, body
+  
   
 
 
@@ -102,8 +111,8 @@ def receive_message(message, responseNumber):
                  "The system crashed, please contact your admin.",
                  detected_language)
   else:
-    to, body = send_message(responseNumber, response, detected_language)
-    return to, body
+    send_message(responseNumber, response, detected_language)
+    
     
 
 
