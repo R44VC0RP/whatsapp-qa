@@ -40,7 +40,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
 # Your Twilio account SID and auth token
 account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
 auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-
+print("Twilio Creds: {} {}".format(account_sid, auth_token)
 
 client = Client(account_sid, auth_token)
 
@@ -74,6 +74,7 @@ def translate_to_language(text, target_language):
 
 def send_twilio_message(to, body):
   print("Sending message '{}' to {}".format(body, to))
+  print("Twilio Creds: {} {}".format(account_sid, auth_token))
   try:
     message = client.messages.create(
       from_='whatsapp:+14155238886',
