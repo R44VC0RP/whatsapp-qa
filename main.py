@@ -1,6 +1,6 @@
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
-from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, Response
 from werkzeug.utils import secure_filename
 #from dataset import preprocess_and_embed_texts, ask
 from datasetv3 import preprocess_and_embed_texts, ask
@@ -162,7 +162,11 @@ def sms_reply():
   message_body = request.form['Body']
   print("Senders Phone Number is {}".format(senderNumber))
   receive_message(message_body, senderNumber)
-  return 'Message received', 200
+  # Create a TwiML response
+  twiml = '<?xml version="1.0" encoding="UTF-8"?>'
+  twiml += '<Response><Message>Message received</Message></Response>'
+  
+  return Response(twiml, mimetype='text/xml')
 
 
 @app.route('/upload', methods=['POST'])
